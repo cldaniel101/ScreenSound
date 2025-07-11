@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Mvc;
 using ScreenSound.Banco;
 using ScreenSound.Modelos;
 using ScreenSound.Shared.Modelos;
+using System.Reflection.Metadata.Ecma335;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,6 +32,12 @@ app.MapGet("/Artistas/{nome}", (string nome) =>
     }
     var artistaResponse = new ArtistaResponse(artista.Id, artista.Nome, artista.Bio, artista.FotoPerfil);
     return Results.Ok(artistaResponse);
+});
+
+app.MapPost("/Artistas", ([FromBody]Artista artista) => {
+    var dal = new DAL<Artista>(new ScreenSoundContext());
+    dal.Adicionar(artista);
+    return Results.Ok();
 });
 
 app.Run();

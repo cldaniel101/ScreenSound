@@ -55,5 +55,15 @@ namespace ScreenSound.API.Endpoints
                 return Results.Ok();
             });
         }
+
+        private static ICollection<MusicaResponse> EntityListToResponseList(IEnumerable<Musica> musicaList)
+        {
+            return musicaList.Select(a => EntityToResponse(a)).ToList();
+        }
+
+        private static MusicaResponse EntityToResponse(Musica musica)
+        {
+            return new MusicaResponse(musica.Id, musica.Nome!, musica.AnoLancamento, musica.Artista);
+        }
     }
 }

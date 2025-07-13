@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Mvc;
 using ScreenSound.API.Requests;
 using ScreenSound.Banco;
 using ScreenSound.Modelos;
@@ -27,12 +28,12 @@ namespace ScreenSound.API.Endpoints
                 return Results.Ok(musicaResponse);
             });
 
-            app.MapPost("/Musicas", ([FromServices] DAL<Musica> dal, [FromBody] MusicaRequest musicaRequest) =>
+            app.MapPost("/Musicas", ([FromServices] DAL<Musica> dal, [FromServices] DAL<Genero> dalGenero, [FromBody] MusicaRequest musicaRequest) =>
             {
                 var musica = new Musica(musicaRequest.nome)
                 {
                     AnoLancamento = musicaRequest.anoLancamento,
-                    Generos = musicaRequest.Generos is not null ? GeneroRequestConverter(musicaRequest.Generos) : new List<Genero>()
+                    Generos = musicaRequest.Generos is not null ? GeneroRequestConverter(musicaRequest.Generos, dalGenero) : new List<Genero>()
                 };
                 dal.Adicionar(musica);
                 return Results.Ok();
@@ -64,9 +65,24 @@ namespace ScreenSound.API.Endpoints
             });
         }
 
-        private static ICollection<Genero> GeneroRequestConverter(ICollection<GeneroRequest> generos)
+        private static ICollection<Genero> GeneroRequestConverter(ICollection<GeneroRequest> generos, DAL<Genero> dalGenero)
         {
-            return generos.Select(a => RequestToEntity(a)).ToList();
+            var listaDeGeneros = new List<Genero>();
+            foreach (var item in generos)
+            {
+                var entity = RequestToEntity(item);
+                var genero = dalGenero.RecuperarPor(a => a.Nome.ToUpper().Equals(entity.Nome.ToUpper()));
+                if (genero is not null)
+                {
+                    listaDeGeneros.Add(genero);
+                }
+                else
+                {
+                    // dalGenero.Adicionar(entity);
+                    listaDeGeneros.Add(entity);
+                }
+            }
+            return listaDeGeneros;
         }
 
         private static Genero RequestToEntity(GeneroRequest genero)
